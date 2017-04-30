@@ -50,8 +50,8 @@ use POSIX qw(strftime);
 my $router = Path::Router->new;
 
 $router->add_route('/api/update_questions', target => \&EntscheideDich::API::update_questions);
-
-$router->add_route('/api/all_questions', target => \&EntscheideDich::API::get_all_questions);
+$router->add_route('/api/all_questions',    target => \&EntscheideDich::API::get_all_questions);
+$router->add_route('/api/vote',             target => \&EntscheideDich::API::vote);
 
 $router->add_route('/',
     target => sub {
