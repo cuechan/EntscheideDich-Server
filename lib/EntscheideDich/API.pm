@@ -90,7 +90,7 @@ sub get_all_questions {
 
 
     $psgi_res->body(encode_json($all_questions));
-    $psgi_res->header("Content-Type" => "text/plain"),
+    $psgi_res->header("Content-Type" => "text/plain; charset=UTF-8");
 
     return $psgi_res->finalize;
 }
