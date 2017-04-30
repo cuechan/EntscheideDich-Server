@@ -29,44 +29,40 @@ use warnings;
 use strict;
 
 use lib './lib';
-use EntscheideDich;
-use EntscheideDich::API;
-use EntscheideDich::Admin;
 use Carp;
 use Data::Dumper;
 use Digest::MD5 qw(md5_hex);
+use EntscheideDich;
+use EntscheideDich::Admin;
+use EntscheideDich::API;
 use feature 'say';
 use JSON::XS;
 use List::MoreUtils ':all';
 use Math::Round 'nearest';
-use POSIX qw(strftime);
+use Path::Router;
+use Plack::App::Path::Router::PSGI;
 use Plack::Request;
 use Plack::Response;
-use Plack::App::Path::Router::PSGI;
-use Path::Router;
+use POSIX qw(strftime);
 
 
 
 my $router = Path::Router->new;
 
-$router->add_route('/api/',
-    target => \&EntscheideDich::API::update_db
-);
+$router->add_route('/api/update_questions', target => \&EntscheideDich::API::update_questions);
 
-$router->add_route('/admin/',
-    target => \&EntscheideDich::API::get_all_questions
-);
+$router->add_route('/api/all_questions', target => \&EntscheideDich::API::get_all_questions);
 
 $router->add_route('/',
     target => sub {
         return [
             200,
-            ["Content-Type" => "text/html"],
-            ["<h1>Hello Roni!!!</h1>"]
+            ["Content-Type" => "text/plain"],
+            [qx(fortune -s)]
         ]
     }
 );
 
 
 
-my $app = Plack::App::Path::Router::PSGI->new(router => $router);
+my $app = Plack::App::Path::Router::PSGI->new(router => $router)->to_app;

@@ -35,12 +35,13 @@ use Carp;
 use Data::Dumper;
 use Digest::MD5 qw(md5_hex);
 use feature 'say';
-use MongoDB;
 use JSON::XS;
 use List::MoreUtils ':all';
 use Math::Round 'nearest';
+use MongoDB;
 use POSIX qw(strftime);
 use Term::ANSIColor;
+use Time::Moment;
 
 
 
@@ -50,14 +51,14 @@ sub get_collection {
     my $collection = shift;
 
     my $mongoclient = MongoDB::MongoClient->new(
-        host => 'mongodb://'.cfg('database.address'),
+        host => 'mongodb://10.8.0.1',
         bson_codec => MongoDB::BSON->new(
             prefer_numeric => 1,
             dt_type        => 'Time::Moment'
         ),
     );
 
-    my $mongodb = $mongoclient->get_database(cfg('DataBase.name'));
+    my $mongodb = $mongoclient->get_database('EntscheideDich');
     return $mongodb->get_collection($collection);
 }
 
@@ -70,7 +71,13 @@ sub decode_json_from_handle {
         $json_str .= $buffer;
     }
 
-    return decode_json($json_str);
+    if (!$json_str) {
+        return;
+    }
+    else {
+        return decode_json($json_str // {});
+    }
+
 }
 
 
@@ -87,13 +94,12 @@ sub get_all_questions {
 
     while (my $doc = $cursor->next()) {
         my $question = EntscheideDich::Question->new_from_doc($doc);
-        die Dumper $question;
 
         push(@all_questions, $question);
     }
 
 
-    return \$all_questions;
+    return \@all_questions;
 }
 
 

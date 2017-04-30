@@ -34,13 +34,13 @@ use strict;
 use Carp;
 use Data::Dumper;
 use Digest::MD5 qw(md5_hex);
+use Encode;
 use feature 'say';
-use MongoDB;
 use JSON::XS;
 use List::MoreUtils ':all';
 use Math::Round 'nearest';
+use MongoDB;
 use POSIX qw(strftime);
-use JSON::XS;
 use Term::ANSIColor;
 
 
@@ -51,10 +51,71 @@ sub new {
     my $self = bless({}, $class);
 
 
+    $self->{question}       = $opt->{question}       or die "field is missing";
+    $self->{guest}          = $opt->{guest}          or die "field is missing";
+    $self->{youtube_link}   = $opt->{youtube_link}   // "";
+    $self->{answer_1}       = $opt->{answer_1}       // "";
+    $self->{answer_2}       = $opt->{answer_2}       // "";
+    $self->{answer_1_count} = $opt->{answer_1_count} // 0;
+    $self->{answer_2_count} = $opt->{answer_2_count} // 0;
+    $self->{keywords}       = $opt->{keywords}       // [];
+
     return $self;
 }
 
 
+
+sub new_from_doc {
+    my $class = shift;
+    my $opt = shift;
+    my $self = bless({}, $class);
+
+
+    $self->{question}       = $opt->{question}       or die "field is missing";
+    $self->{guest}          = $opt->{guest}          or die "field is missing";
+    $self->{youtube_link}   = $opt->{youtube_link}   // "";
+    $self->{answer_1}       = $opt->{answer_1}       // "";
+    $self->{answer_2}       = $opt->{answer_2}       // "";
+    $self->{answer_1_count} = $opt->{answer_1_count} // 0;
+    $self->{answer_2_count} = $opt->{answer_2_count} // 0;
+    $self->{keywords}       = $opt->{keywords}       // [];
+
+
+    return $self;
+}
+
+
+sub checksum {
+    my $self = shift;
+    my $opt = shift;
+
+
+    return if !exists $self->{question};
+    return if !exists $self->{guest};
+    return if !exists $self->{youtube_link};
+    return if !exists $self->{answer_1};
+    return if !exists $self->{answer_2};
+    return if !exists $self->{answer_1_count};
+    return if !exists $self->{answer_2_count};
+
+    return md5_hex(
+        encode_utf8($self->{question}),
+        encode_utf8($self->{guest}),
+        encode_utf8($self->{youtube_link}),
+        encode_utf8($self->{answer_1}),
+        encode_utf8($self->{answer_2}),
+        $self->{answer_1_count},
+        $self->{answer_2_count},
+    );
+}
+
+
+sub export {
+    my $self = shift;
+    my $opt = shift;
+
+    return {%$self};
+}
 
 
 1;

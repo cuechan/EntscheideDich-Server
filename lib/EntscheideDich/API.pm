@@ -37,6 +37,8 @@ use feature 'say';
 use JSON::XS;
 use EntscheideDich::Question;
 use EntscheideDich::Utils;
+use Plack::Request;
+use Plack::Response;
 
 
 
@@ -44,10 +46,13 @@ use EntscheideDich::Utils;
 
 
 sub update_questions {
-    my $psgi = Plack::Request->new(shift);
+    my $env = shift;
+    my $psgi = Plack::Request->new($env);
     my $fh = $psgi->body();
-
     my $client_db = EntscheideDich::Utils::decode_json_from_handle($fh);
+
+
+
 
 
     my $add;
@@ -71,23 +76,23 @@ sub update_questions {
 
 sub get_all_questions {
     my $psgi = Plack::Request->new(shift);
-    my $fh = $psgi->body();
+    my $psgi_res = Plack::Response->new(200);
+    my $req = EntscheideDich::Utils::decode_json_from_handle($psgi->body);
 
-    my $json_str;
 
-    open(my $data, '<', <DATA>);
-    while (my $line = <DATA>) {
-        $json_str .= $line;
+    my $all_questions = EntscheideDich::Utils::get_all_questions();
+
+
+    foreach my $quest (@$all_questions) {
+        $quest = $quest->export;
     }
 
 
-    my @all_quests = decode_json($json_str);
 
-    return [
-        200,
-        ["Content-Type" => "text/plain"],
-        [encode_json({})]
-    ]
+    $psgi_res->body(encode_json($all_questions));
+    $psgi_res->header("Content-Type" => "text/plain"),
+
+    return $psgi_res->finalize;
 }
 
 
