@@ -73,9 +73,7 @@ sub update_questions {
     # convert array to hash
 
     my %client_quests = map {$_->{id} => $_->{checksum}} @{$client_db->{i_have}};
-    my %server_quests = map {$_->get_id => {$_}} @{$client_db->{i_have}};
 
-    print Dumper {%server_quests};
 
     foreach my $question (@$all_quests) {
         # here is the magic!
