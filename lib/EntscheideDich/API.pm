@@ -90,9 +90,54 @@ sub get_all_questions {
 
 
     $psgi_res->body(encode_json($all_questions));
-    $psgi_res->header("Content-Type" => "text/plain"),
+    $psgi_res->header("Content-Type" => "text/plain");
 
     return $psgi_res->finalize;
+}
+
+
+sub vote {
+    my $psgi = Plack::Request->new(shift);
+    my $req = EntscheideDich::Utils::decode_json_from_handle($psgi->body);
+    my $res = Plack::Response->new(200);
+    $res->header("Content-Type" => "text/plain");
+
+    my $db_votes = get_collection("Votings");
+
+
+    if (ref $req->{i_vote} ne 'ARRAY') {
+        $res->status(400);
+        $res->body("'i_vote' is  not an array");
+        return $res->finalize;
+    }
+
+    my $device_id = $req->{device_id};
+
+    if (!$device_id or $device_id !~ m/[0-9a-f]{32}/i) {
+        $res->status(400);
+        $res->body("'device_id' is not valid");
+        return $res->finalize;
+    }
+
+
+    foreach my $voting (@{$req->{i_vote}}) {
+        $db_votes->update_one(
+            {
+                device_id => $device_id,
+                question_id => $voting->{id}
+            },
+            {'$set' => {
+                "answer" => $voting->{answer}
+            }},
+            {upsert => 1}
+        );
+    }
+
+
+
+    $res->body(encode_json({err => 0, message => "success"}));
+
+    return $res->finalize;
 }
 
 
