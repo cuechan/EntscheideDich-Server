@@ -42,6 +42,9 @@ use MongoDB;
 use POSIX qw(strftime);
 use Term::ANSIColor;
 use Time::Moment;
+use Exporter 'import';
+
+our @EXPORT = ("get_collection");
 
 
 
