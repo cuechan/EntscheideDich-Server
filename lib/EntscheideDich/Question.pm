@@ -118,7 +118,7 @@ sub export {
     my $opt = {%$self};
 
     delete $opt->{_id};
-    return {%$opt};
+    return {%$opt, checksum => $self->checksum};
 }
 
 
