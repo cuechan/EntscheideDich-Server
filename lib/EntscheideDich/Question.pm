@@ -51,6 +51,7 @@ sub new {
     my $self = bless({}, $class);
 
 
+    #$self->{id}             = $opt->{id}             or die "field is missing";
     $self->{question}       = $opt->{question}       or die "field is missing";
     $self->{guest}          = $opt->{guest}          or die "field is missing";
     $self->{youtube_link}   = $opt->{youtube_link}   // "";
@@ -71,6 +72,8 @@ sub new_from_doc {
     my $self = bless({}, $class);
 
 
+    $self->{_id}            = $opt->{_id}            or die "field is missing";
+    $self->{id}             = $opt->{id}             or die "field is missing";
     $self->{question}       = $opt->{question}       or die "field is missing";
     $self->{guest}          = $opt->{guest}          or die "field is missing";
     $self->{youtube_link}   = $opt->{youtube_link}   // "";
@@ -112,9 +115,10 @@ sub checksum {
 
 sub export {
     my $self = shift;
-    my $opt = shift;
+    my $opt = {%$self};
 
-    return {%$self};
+    delete $opt->{_id};
+    return {%$opt, checksum => $self->checksum};
 }
 
 

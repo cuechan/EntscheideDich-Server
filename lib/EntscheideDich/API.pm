@@ -52,25 +52,64 @@ sub update_questions {
     my $client_db = EntscheideDich::Utils::decode_json_from_handle($fh);
 
 
+    unless ($client_db) {
+        # the client havent sent any data
+        # assuming the client dont have any questions
+
+        $client_db = {
+            i_have => []
+        }
+    }
 
 
 
-    my $add;
-    my $update;
-    my $delete;
-
+    my $add = [];
+    my $update = [];
+    my $delete = [];
 
     my $all_quests = EntscheideDich::Utils::get_all_questions();
 
 
-    my $returnmet;
+    # convert array to hash
+
+    my %client_quests = map {$_->{id} => $_->{checksum}} @{$client_db->{i_have}};
 
 
-    return [
-        200,
-        ["Content-Type" => "text/plain"],
-        ["ok"]
-    ]
+    foreach my $question (@$all_quests) {
+        # here is the magic!
+
+        if (exists $client_quests{$question->{id}}) {
+            # ok the questions exists. lets check the checksum
+            if ($client_quests{$question->{id}} ne $question->checksum) {
+                # the question has changed
+
+                push(@$update, $question->export);
+            }
+        }
+        else {
+            # the question does not exist
+
+            push(@$add, $question->export);
+        }
+
+        delete $client_quests{$question->{id}};
+    }
+
+
+    push(@$delete, $_) foreach (keys %client_quests);
+
+
+    my $returnmet = {
+        add => $add,
+        update => $update,
+        delete => $delete
+    };
+
+
+    my $psgi_res = Plack::Response->new(200);
+    $psgi_res->body(encode_json($returnmet));
+    $psgi_res->header("Content-Type" => "text/plain; charset=UTF-8");
+    return $psgi_res->finalize;
 }
 
 
@@ -90,7 +129,7 @@ sub get_all_questions {
 
 
     $psgi_res->body(encode_json($all_questions));
-    $psgi_res->header("Content-Type" => "text/plain");
+    $psgi_res->header("Content-Type" => "text/plain; charset=UTF-8");
 
     return $psgi_res->finalize;
 }
